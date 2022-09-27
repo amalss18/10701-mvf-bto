@@ -7,4 +7,4 @@ seaborn
 tqdm
 
 # version requirement to parse dataset
-h5py==2.8.0
+h5py
