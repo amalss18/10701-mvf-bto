@@ -1,10 +1,11 @@
 def load_data(file_path, num_cells=None):
     """
-    Loads data from .mat files.
+    Loads battery cycling data from a .mat file.
     Parameters
     __________
     file_path: str
-        Absolute path to file.
+        Absolute path to data file.
+        (download here: https://data.matr.io/1/projects/5c48dd2bc625d700019f3204)
     num_cells: Optional[int]
         Number of cells to load data for.
         Defaults to all cells in file.
