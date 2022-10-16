@@ -5,6 +5,9 @@ pandas
 scipy
 seaborn
 tqdm
-
-# version requirement to parse dataset
 h5py
+plotly
+keras
+tensorflow==2.9.1
+keras==2.9.0
+scikit-learn
