@@ -56,16 +56,19 @@ def create_discharge_inputs(
     cell_ids = list(data.keys())
     random.shuffle(cell_ids)
 
-    n_train = int(train_split * len(cell_ids))
-    n_test = int(test_split * len(cell_ids))
+    # n_train = int(train_split * len(cell_ids))
+    # n_test = int(test_split * len(cell_ids))
     assert train_split + test_split <= 1
 
+    # print(n_test)
+    n_train = 1 
+    n_test = 1
     train_cells, test_cells, validation_cells = (
         cell_ids[:n_train],
         cell_ids[n_train : n_train + n_test],
         cell_ids[n_train + n_test :],
     )
-
+    print(test_cells)
     X_train_list, X_test_list, X_val_list = [], [], []
     y_train_list, y_test_list, y_val_list = [], [], []
 
@@ -75,7 +78,8 @@ def create_discharge_inputs(
             input_columns=input_columns,
             output_columns=output_columns,
             history_window=history_window,
-            q_eval=q_eval
+            q_eval=q_eval,
+            forecast_horizon=forecast_horizon
         )
         X_train_list.extend(X_cell_list)
         y_train_list.extend(y_cell_list)
@@ -86,10 +90,12 @@ def create_discharge_inputs(
             input_columns=input_columns,
             output_columns=output_columns,
             history_window=history_window,
-            q_eval=q_eval
+            q_eval=q_eval,
+            forecast_horizon=forecast_horizon
         )
         X_test_list.extend(X_cell_list)
         y_test_list.extend(y_cell_list)
+        # print(X_test_list)
 
     if len(validation_cells):
         for cell_id in validation_cells:
@@ -98,11 +104,13 @@ def create_discharge_inputs(
                 input_columns=input_columns,
                 output_columns=output_columns,
                 history_window=history_window,
-                q_eval=q_eval
+                q_eval=q_eval,
+                forecast_horizon=forecast_horizon
             )
             X_val_list.extend(X_cell_list)
             y_val_list.extend(y_cell_list)
 
+    # print(X_train_list)
     batch_size = X_train_list[0].shape[0]
     X_train = np.array(X_train_list)
     X_test = np.array(X_test_list)
@@ -112,6 +120,7 @@ def create_discharge_inputs(
     y_test = np.array(y_test_list)
     y_val = np.array(y_val_list)
 
+    print(X_train.shape, X_test.shape)
     X_train = X_train.reshape(
         X_train.shape[0] * batch_size, X_train[0].shape[1], X_train.shape[-1]
     )
@@ -194,29 +203,30 @@ def _get_interpolated_normalized_discharge_data(single_cell_data, q_eval):
     return df_list
 
 
-def _split_sequences(sequences, n_steps, n_outputs):
+def _split_sequences(sequences, n_steps, n_outputs, nf_steps):
     """
     Helper function to split a multivariate sequence into samples.
     """
     X, y = list(), list()
-    for i in range(len(sequences)):
+    for i in range(len(sequences) - n_steps - nf_steps):
         # find the end of this pattern
         end_ix = i + n_steps
         # check if we are beyond the dataset
-        if end_ix > len(sequences):
-            break
+        # if end_ix > len(sequences):
+        #     break
             # gather input and output parts of the pattern
         seq_x, seq_y = (
             sequences[i : end_ix - 1, :-n_outputs],
-            sequences[end_ix - 1, -n_outputs:],
+            [sequences[end_ix - 1 +j, -n_outputs:] for j in np.arange(nf_steps)],
         )
         X.append(seq_x)
         y.append(seq_y)
+    # print(np.array(y).shape)
     return np.array(X), np.array(y)
 
 
 def _get_single_cell_inputs(
-    single_cell_data, input_columns, output_columns, history_window, q_eval
+    single_cell_data, input_columns, output_columns, history_window, q_eval, forecast_horizon
 ):
     """
     Helper function to preprocess time series inputs for a single cell (battery).
@@ -244,7 +254,7 @@ def _get_single_cell_inputs(
 
         # convert into input/output
         X_cycle, y_cycle = _split_sequences(
-            dataset, history_window, n_outputs=len(output_columns)
+            dataset, history_window, n_outputs=len(output_columns), nf_steps=forecast_horizon
         )
         X_list.append(X_cycle)
         y_list.append(y_cycle)

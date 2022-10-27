@@ -26,6 +26,7 @@ def load_data(file_path, num_cells=None):
         `cycles`: Time series battery cycling data
                   (with cycle number str as key).
     """
+    print("test")
     f = h5py.File(file_path)
     batch = f["batch"]
     bat_dict = {}
