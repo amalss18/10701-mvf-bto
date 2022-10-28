@@ -56,19 +56,20 @@ def create_discharge_inputs(
     cell_ids = list(data.keys())
     random.shuffle(cell_ids)
 
-    # n_train = int(train_split * len(cell_ids))
-    # n_test = int(test_split * len(cell_ids))
+    n_train = int(train_split * len(cell_ids))
+    n_test = int(test_split * len(cell_ids))
     assert train_split + test_split <= 1
 
-    # print(n_test)
-    n_train = 1 
-    n_test = 1
+    if len(cell_ids) < 5:
+        print("Set more than 5 cells as input!")
+        n_train = 1 
+        n_test = 1
+
     train_cells, test_cells, validation_cells = (
         cell_ids[:n_train],
         cell_ids[n_train : n_train + n_test],
         cell_ids[n_train + n_test :],
     )
-    print(test_cells)
     X_train_list, X_test_list, X_val_list = [], [], []
     y_train_list, y_test_list, y_val_list = [], [], []
 
@@ -95,7 +96,6 @@ def create_discharge_inputs(
         )
         X_test_list.extend(X_cell_list)
         y_test_list.extend(y_cell_list)
-        # print(X_test_list)
 
     if len(validation_cells):
         for cell_id in validation_cells:
@@ -110,7 +110,6 @@ def create_discharge_inputs(
             X_val_list.extend(X_cell_list)
             y_val_list.extend(y_cell_list)
 
-    # print(X_train_list)
     batch_size = X_train_list[0].shape[0]
     X_train = np.array(X_train_list)
     X_test = np.array(X_test_list)
@@ -120,7 +119,6 @@ def create_discharge_inputs(
     y_test = np.array(y_test_list)
     y_val = np.array(y_val_list)
 
-    print(X_train.shape, X_test.shape)
     X_train = X_train.reshape(
         X_train.shape[0] * batch_size, X_train[0].shape[1], X_train.shape[-1]
     )
@@ -131,10 +129,9 @@ def create_discharge_inputs(
         X_val.shape[0] * batch_size, X_val[0].shape[1], X_val.shape[-1]
     )
 
-    y_train = y_train.reshape(y_train.shape[0] * y_train.shape[1], y_train.shape[-1])
-    y_test = y_test.reshape(y_test.shape[0] * y_test.shape[1], y_test.shape[-1])
-    y_val = y_val.reshape(y_val.shape[0] * y_val.shape[1], y_val.shape[-1])
-
+    y_train = y_train.reshape(y_train.shape[0] * y_train.shape[1], y_val.shape[2], y_train.shape[-1])
+    y_test = y_test.reshape(y_test.shape[0] * y_test.shape[1], y_val.shape[2], y_test.shape[-1])
+    y_val = y_val.reshape(y_val.shape[0] * y_val.shape[1], y_val.shape[2], y_val.shape[-1])
     return {
         "X_train": X_train,
         "X_test": X_test,
@@ -211,17 +208,13 @@ def _split_sequences(sequences, n_steps, n_outputs, nf_steps):
     for i in range(len(sequences) - n_steps - nf_steps):
         # find the end of this pattern
         end_ix = i + n_steps
-        # check if we are beyond the dataset
-        # if end_ix > len(sequences):
-        #     break
-            # gather input and output parts of the pattern
+        # gather input and output parts of the pattern
         seq_x, seq_y = (
             sequences[i : end_ix - 1, :-n_outputs],
             [sequences[end_ix - 1 +j, -n_outputs:] for j in np.arange(nf_steps)],
         )
         X.append(seq_x)
         y.append(seq_y)
-    # print(np.array(y).shape)
     return np.array(X), np.array(y)
 
 

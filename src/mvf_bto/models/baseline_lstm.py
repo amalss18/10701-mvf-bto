@@ -27,11 +27,12 @@ class BaselineLSTM(tf.keras.Model):
         self.dense_1 = tf.keras.layers.Dense(units=dense1_units, activation="relu")
         self.dense_2 = tf.keras.layers.Dense(units=dense2_units)
         self.dense_3 = tf.keras.layers.Dense(units=nf_steps*n_outputs)
-        self.output_layer = tf.keras.layers.Reshape([n_outputs, nf_steps])
+        self.output_layer = tf.keras.layers.Reshape([nf_steps, n_outputs])
 
     def call(self, inputs):
         x = self.lstm_1(inputs)
         x = self.lstm_2(x)
         x = self.dense_1(x)
         x = self.dense_2(x)
+        x = self.dense_3(x)
         return self.output_layer(x)
