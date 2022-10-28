@@ -4,3 +4,5 @@ src/lab/
 src/mvf_bto.egg-info
 src/mvf_bto/.ipynb_checkpoints/
 src/mvf_bto/untitled_project/
+src/mvf_bto/__pycache__/
+src/mvf_bto/models/__pycache__/
