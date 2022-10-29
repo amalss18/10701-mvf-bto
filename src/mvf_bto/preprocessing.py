@@ -11,10 +11,12 @@ from mvf_bto.constants import (
     MAX_DISCHARGE_CURRENT,
     MIN_DISCHARGE_CURRENT,
     REFERENCE_CAPACITIES,
+    MAX_CYCLE
 )
 
 DEFAULT_FEATURES = ["T_norm", "Q_eval", "V_norm", "Cycle"]
 DEFAULT_TARGETS = ["V_norm", "T_norm"]
+BLACKLISTED_CELL = ["b1c3", "b1c8"]
 
 
 def create_discharge_inputs(
@@ -25,9 +27,8 @@ def create_discharge_inputs(
         output_columns=DEFAULT_TARGETS,
         history_window=4,
         q_eval=REFERENCE_CAPACITIES,
-        forecast_horizon=None,
+        forecast_horizon=1,
 ):
-    # TODO: add multi-timestep forecast horizon
     """
     Creates inputs to LSTM model for voltage and/ or temperature forecasting.
     Parameters
@@ -53,7 +54,17 @@ def create_discharge_inputs(
                 y_train, y_test, y_val,
                 batch_size.)
     """
-    cell_ids = list(data.keys())
+
+    loaded_cell_ids = list(data.keys())
+    cell_ids = []
+
+    for cell_id in loaded_cell_ids:
+        if cell_id not in BLACKLISTED_CELL:
+            cell_ids.append(cell_id)
+
+        else:
+            print(f" Data for cell {cell_id} is corrupted. Skipping cell.")
+
     random.shuffle(cell_ids)
 
     n_train = int(train_split * len(cell_ids))
@@ -168,7 +179,7 @@ def _get_interpolated_normalized_discharge_data(cell_id, single_cell_data, q_eva
     Stores time series from each cycle in a dataframe.
     """
     df_list, original_df_list = [], []
-    max_cycle = max([int(i) for i in single_cell_data.keys()])
+    MAX_CYCLE = 2300
 
     # iterate over each cycle in data
     for cycle_key, time_series in tqdm.tqdm(single_cell_data.items()):
@@ -176,7 +187,7 @@ def _get_interpolated_normalized_discharge_data(cell_id, single_cell_data, q_eva
 
         if cycle_num < 1:
             continue
-        if cycle_num >= max_cycle:
+        if cycle_num >= MAX_CYCLE:
             continue
         df = pd.DataFrame(
             {
@@ -215,7 +226,7 @@ def _get_interpolated_normalized_discharge_data(cell_id, single_cell_data, q_eva
 
         fT = interp1d(x=df.Qd, y=df["T_norm"])
         interp_df["T_norm"] = fT(q_eval)
-        interp_df["Cycle"] = [cycle_num / 1500 for i in range(len(interp_df))]
+        interp_df["Cycle"] = [cycle_num / MAX_CYCLE for i in range(len(interp_df))]
 
         df_list.append(interp_df)
     return df_list, original_df_list
@@ -229,13 +240,10 @@ def _split_sequences(sequences, n_steps, n_outputs, nf_steps):
     for i in range(len(sequences) - n_steps - nf_steps):
         # find the end of this pattern
         end_ix = i + n_steps
-        # check if we are beyond the dataset
-        if end_ix > len(sequences):
-            break
-            # gather input and output parts of the pattern
+        # gather input and output parts of the pattern
         seq_x, seq_y = (
             sequences[i: end_ix - 1, :-n_outputs],
-            [sequences[end_ix - 1 +j, -n_outputs:] for j in np.arange(nf_steps)],
+            [sequences[end_ix - 1 + j, -n_outputs:] for j in np.arange(nf_steps)],
         )
         X.append(seq_x)
         y.append(seq_y)

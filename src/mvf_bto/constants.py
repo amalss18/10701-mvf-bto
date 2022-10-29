@@ -3,6 +3,7 @@ VOLTAGE_MIN = 1.9
 VOLTAGE_MAX = 3.5
 TEMPERATURE_MIN = 24
 TEMPERATURE_MAX = 38
+MAX_CYCLE = 2300
 
 # PREPROCESSING
 # Constant Current 4C Discharge current is approx 4A
