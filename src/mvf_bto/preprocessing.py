@@ -65,7 +65,7 @@ def create_discharge_inputs(
         else:
             print(f" Data for cell {cell_id} is corrupted. Skipping cell.")
 
-    random.shuffle(cell_ids)
+    # random.shuffle(cell_ids)
 
     n_train = int(train_split * len(cell_ids))
     n_test = int(test_split * len(cell_ids))

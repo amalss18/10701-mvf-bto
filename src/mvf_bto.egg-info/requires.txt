@@ -1,0 +1,13 @@
+jupyter
+matplotlib
+numpy
+pandas
+scipy
+seaborn
+tqdm
+h5py
+plotly
+keras
+tensorflow==2.9.1
+keras==2.9.0
+scikit-learn
