@@ -169,7 +169,7 @@ def create_discharge_inputs(
         "original_val": pd.concat(original_val_dfs),
         "original_train": pd.concat(original_train_dfs),
         "batch_size": batch_size,
-    }
+    }, train_cells, test_cells, validation_cells
 
 
 def _get_interpolated_normalized_discharge_data(cell_id, single_cell_data, q_eval):
