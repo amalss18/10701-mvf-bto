@@ -1,3 +1,4 @@
+import numpy as np
 # DATA NORMALIZATION
 VOLTAGE_MIN = 1.9
 VOLTAGE_MAX = 3.5
@@ -36,3 +37,6 @@ REFERENCE_CAPACITIES = [
     0.998,
     1.0,
 ]
+
+# REFERENCE_CAPACITIES=np.linspace(0,1,31)
+# REFERENCE_CAPACITIES=np.linspace(0,1,41)
