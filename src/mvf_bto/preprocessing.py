@@ -444,7 +444,7 @@ def _split_sequences(sequences, n_steps, n_outputs, nf_steps):
         # gather input and output parts of the pattern
         seq_x, seq_y = (
              sequences[i: end_ix - 1, :-n_outputs],
-            [ [sequences[end_ix - 1 + j, -n_outputs:] for j in np.arange(nf_steps)] for j in np.arange(nf_steps)],
+             [sequences[end_ix - 1 + j, -n_outputs:] for j in np.arange(nf_steps)] ,
          )
         X.append(seq_x)
         y.append(seq_y)
