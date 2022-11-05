@@ -171,8 +171,11 @@ def create_discharge_inputs(
         "y_train": y_train,
         "y_test": y_test,
         "y_val": y_val,
+        "original_train": pd.concat(original_train_dfs),
+        "original_test": pd.concat(original_test_dfs),
+        "original_val": pd.concat(original_val_dfs),
         "batch_size": batch_size,
-    }, train_cells, test_cells, validation_cells
+    }# , train_cells, test_cells, validation_cells
 
 def create_charge_inputs(
     data,
@@ -459,9 +462,9 @@ def _get_single_cell_inputs(
     """
     X_list, y_list = [], []
     if (q_eval[1]==REFERENCE_DISCHARGE_CAPACITIES[1] and q_eval[2]==REFERENCE_DISCHARGE_CAPACITIES[2]):
-        df_list = _get_interpolated_normalized_discharge_data(cell_id, single_cell_data, q_eval=q_eval)
+        df_list, original_df_list = _get_interpolated_normalized_discharge_data(cell_id, single_cell_data, q_eval=q_eval)
     else:
-        df_list = _get_interpolated_normalized_charge_data(cell_id, single_cell_data, q_eval=q_eval)
+        df_list, original_df_list = _get_interpolated_normalized_charge_data(cell_id, single_cell_data, q_eval=q_eval)
         # print(len(df_list))
     for df in df_list:
         sequence_list = []
