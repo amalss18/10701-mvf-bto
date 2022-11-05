@@ -117,7 +117,6 @@ def create_discharge_inputs(
             history_window=history_window,
             q_eval=q_eval,
             forecast_horizon=forecast_horizon,
-            forecast_horizon=forecast_horizon
         )
         X_test_list.extend(X_cell_list)
         y_test_list.extend(y_cell_list)
@@ -235,7 +234,6 @@ def create_charge_inputs(
             output_columns=output_columns,
             history_window=history_window,
             q_eval=q_eval,
-            forecast_horizon=forecast_horizon,\
             forecast_horizon=forecast_horizon
         )
         X_train_list.extend(X_cell_list)
@@ -251,7 +249,6 @@ def create_charge_inputs(
             history_window=history_window,
             q_eval=q_eval,
             forecast_horizon=forecast_horizon,
-            forecast_horizon=forecast_horizon
         )
         X_test_list.extend(X_cell_list)
         y_test_list.extend(y_cell_list)
@@ -267,7 +264,6 @@ def create_charge_inputs(
                 history_window=history_window,
                 q_eval=q_eval,
                 forecast_horizon=forecast_horizon,
-                forecast_horizon=forecast_horizon
             )
             X_val_list.extend(X_cell_list)
             y_val_list.extend(y_cell_list)
@@ -442,13 +438,13 @@ def _split_sequences(sequences, n_steps, n_outputs, nf_steps):
     Helper function to split a multivariate sequence into samples.
     """
     X, y = list(), list()
-    for i in range(len(sequences) - n_steps - nf_steps - n_steps - nf_steps):
+    for i in range(len(sequences) - n_steps - nf_steps):
         # find the end of this pattern
         end_ix = i + n_steps
         # gather input and output parts of the pattern
         seq_x, seq_y = (
              sequences[i: end_ix - 1, :-n_outputs],
-            [ [sequences[end_ix - 1 + j +j, -n_outputs:] for j in np.arange(nf_steps)] for j in np.arange(nf_steps)],
+            [ [sequences[end_ix - 1 + j, -n_outputs:] for j in np.arange(nf_steps)] for j in np.arange(nf_steps)],
          )
         X.append(seq_x)
         y.append(seq_y)
@@ -488,7 +484,7 @@ def _get_single_cell_inputs(
 
         # convert into input/output
         X_cycle, y_cycle = _split_sequences(
-             dataset, history_window, n_outputs=len(output_columns), nf_steps=forecast_horizon, nf_steps=forecast_horizon
+             dataset, history_window, n_outputs=len(output_columns), nf_steps=forecast_horizon
          )
         X_list.append(X_cycle)
         y_list.append(y_cycle)
