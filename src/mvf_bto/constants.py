@@ -1,3 +1,5 @@
+import numpy as np
+
 # DATA NORMALIZATION
 VOLTAGE_MIN = 1.9
 VOLTAGE_MAX = 3.5
@@ -11,10 +13,13 @@ MAX_CYCLE = 2300
 MAX_DISCHARGE_CURRENT = -3.98
 MIN_DISCHARGE_CURRENT = -4.05
 
+# charging current
+MIN_CHARGE_CURRENT = 0.0
+
 # INTERPOLATION
 # Discharge curve is interpolated over these capacities
 # More points in non-linear regions
-REFERENCE_CAPACITIES = [
+REFERENCE_DISCHARGE_CAPACITIES = [
     0.00,
     0.025,
     0.075,
@@ -36,3 +41,12 @@ REFERENCE_CAPACITIES = [
     0.998,
     1.0,
 ]
+
+# REFERENCE CHARGE CAPACITIES: DIFFERENT FROM DISCHARGE
+# THREE STEPS OF CHARGING REQUIRES NON-UNIFORM SPLIT OF INTERPOLATION POINTS
+Qc_eval = np.linspace(0,0.1,21)
+Qc_eval = np.append(Qc_eval, np.linspace(0.1,0.8,8))
+Qc_eval = np.append(Qc_eval, np.linspace(0.8,0.85,11))
+Qc_eval = np.append(Qc_eval, np.linspace(0.85,0.98,14))
+Qc_eval = np.append(Qc_eval, np.linspace(0.98,1.00,2))
+REFERENCE_CHARGE_CAPACITIES=Qc_eval
