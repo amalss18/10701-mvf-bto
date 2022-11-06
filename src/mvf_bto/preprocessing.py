@@ -156,9 +156,6 @@ def create_discharge_inputs(
     X_val = X_val.reshape(
         X_val.shape[0] * batch_size, X_val[0].shape[1], X_val.shape[-1]
     )
-    # y_train = y_train.reshape(y_train.shape[0] * y_train.shape[1], y_train.shape[-1])
-    # y_test = y_test.reshape(y_test.shape[0] * y_test.shape[1], y_test.shape[-1])
-    # y_val = y_val.reshape(y_val.shape[0] * y_val.shape[1], y_val.shape[-1])
 
     y_train = y_train.reshape(y_train.shape[0] * y_train.shape[1], y_val.shape[2], y_train.shape[-1])
     y_test = y_test.reshape(y_test.shape[0] * y_test.shape[1], y_val.shape[2], y_test.shape[-1])
