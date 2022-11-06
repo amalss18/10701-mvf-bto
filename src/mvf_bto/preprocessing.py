@@ -23,14 +23,14 @@ BLACKLISTED_CELL = ["b1c3", "b1c8"]
 
 
 def create_discharge_inputs(
-    data,
-    train_split,
-    test_split,
-    input_columns=DEFAULT_FEATURES,
-    output_columns=DEFAULT_TARGETS,
-    history_window=4,
-    q_eval=REFERENCE_DISCHARGE_CAPACITIES,
-    forecast_horizon=None,
+        data,
+        train_split,
+        test_split,
+        input_columns=DEFAULT_FEATURES,
+        output_columns=DEFAULT_TARGETS,
+        history_window=4,
+        q_eval=REFERENCE_DISCHARGE_CAPACITIES,
+        forecast_horizon=1,
 ):
     """
     Creates inputs to LSTM model for voltage and/ or temperature forecasting.
@@ -137,7 +137,7 @@ def create_discharge_inputs(
             X_val_list.extend(X_cell_list)
             y_val_list.extend(y_cell_list)
             original_val_dfs.extend(original_df_list)
-            
+
     batch_size = X_train_list[0].shape[0]
     X_train = np.array(X_train_list)
     X_test = np.array(X_test_list)
@@ -175,17 +175,18 @@ def create_discharge_inputs(
         "original_test": pd.concat(original_test_dfs),
         "original_val": pd.concat(original_val_dfs),
         "batch_size": batch_size,
-    }# , train_cells, test_cells, validation_cells
+    }  # , train_cells, test_cells, validation_cells
+
 
 def create_charge_inputs(
-    data,
-    train_split,
-    test_split,
-    input_columns=DEFAULT_FEATURES,
-    output_columns=DEFAULT_TARGETS,
-    history_window=4,
-    q_eval=REFERENCE_CHARGE_CAPACITIES,
-    forecast_horizon=None,
+        data,
+        train_split,
+        test_split,
+        input_columns=DEFAULT_FEATURES,
+        output_columns=DEFAULT_TARGETS,
+        history_window=4,
+        q_eval=REFERENCE_CHARGE_CAPACITIES,
+        forecast_horizon=1,
 ):
     # TODO: add multi-timestep forecast horizon
     """
@@ -222,16 +223,18 @@ def create_charge_inputs(
 
     train_cells, test_cells, validation_cells = (
         cell_ids[:n_train],
-        cell_ids[n_train : n_train + n_test],
-        cell_ids[n_train + n_test :],
+        cell_ids[n_train: n_train + n_test],
+        cell_ids[n_train + n_test:],
     )
+
 
     X_train_list, X_test_list, X_val_list = [], [], []
     y_train_list, y_test_list, y_val_list = [], [], []
-            
-    orginal_train_dfs = []
+
+    original_train_dfs = []
     for cell_id in train_cells:
         X_cell_list, y_cell_list, original_df_list = _get_single_cell_inputs(
+            cell_id=cell_id,
             single_cell_data=data[cell_id]["cycles"],
             input_columns=input_columns,
             output_columns=output_columns,
@@ -241,11 +244,12 @@ def create_charge_inputs(
         )
         X_train_list.extend(X_cell_list)
         y_train_list.extend(y_cell_list)
-        orginal_train_dfs.extend(original_df_list)
+        original_train_dfs.extend(original_df_list)
 
-    orginal_test_dfs = []
+    original_test_dfs = []
     for cell_id in test_cells:
         X_cell_list, y_cell_list, original_df_list = _get_single_cell_inputs(
+            cell_id=cell_id,
             single_cell_data=data[cell_id]["cycles"],
             input_columns=input_columns,
             output_columns=output_columns,
@@ -255,12 +259,13 @@ def create_charge_inputs(
         )
         X_test_list.extend(X_cell_list)
         y_test_list.extend(y_cell_list)
-        orginal_test_dfs.extend(original_df_list)
+        original_test_dfs.extend(original_df_list)
 
-    orginal_val_dfs = []
+    original_val_dfs = []
     if len(validation_cells):
         for cell_id in validation_cells:
             X_cell_list, y_cell_list, original_df_list = _get_single_cell_inputs(
+                cell_id=cell_id,
                 single_cell_data=data[cell_id]["cycles"],
                 input_columns=input_columns,
                 output_columns=output_columns,
@@ -270,7 +275,7 @@ def create_charge_inputs(
             )
             X_val_list.extend(X_cell_list)
             y_val_list.extend(y_cell_list)
-            orginal_val_dfs.extend(original_df_list)
+            original_val_dfs.extend(original_df_list)
 
     batch_size = X_train_list[0].shape[0]
     X_train = np.array(X_train_list)
@@ -296,17 +301,17 @@ def create_charge_inputs(
     y_val = y_val.reshape(y_val.shape[0] * y_val.shape[1], y_val.shape[2], y_val.shape[-1])
 
     return {
-        "X_train": X_train,
-        "X_test": X_test,
-        "X_val": X_val,
-        "y_train": y_train,
-        "y_test": y_test,
-        "y_val": y_val,
-        "original_test": pd.concat(original_test_dfs),
-        "original_val": pd.concat(original_val_dfs),
-        "original_train": pd.concat(original_train_dfs),
-        "batch_size": batch_size,
-    }, train_cells, test_cells, validation_cells
+               "X_train": X_train,
+               "X_test": X_test,
+               "X_val": X_val,
+               "y_train": y_train,
+               "y_test": y_test,
+               "y_val": y_val,
+               "original_test": pd.concat(original_test_dfs),
+               "original_val": pd.concat(original_val_dfs),
+               "original_train": pd.concat(original_train_dfs),
+               "batch_size": batch_size,
+           }
 
 
 def _get_interpolated_normalized_discharge_data(cell_id, single_cell_data, q_eval):
@@ -316,7 +321,6 @@ def _get_interpolated_normalized_discharge_data(cell_id, single_cell_data, q_eva
     Stores time series from each cycle in a dataframe.
     """
     df_list, original_df_list = [], []
-    MAX_CYCLE = 2300
 
     # iterate over each cycle in data
     for cycle_key, time_series in tqdm.tqdm(single_cell_data.items()):
@@ -368,22 +372,23 @@ def _get_interpolated_normalized_discharge_data(cell_id, single_cell_data, q_eva
         df_list.append(interp_df)
     return df_list, original_df_list
 
-def _get_interpolated_normalized_charge_data(single_cell_data, q_eval):
+
+def _get_interpolated_normalized_charge_data(cell_id, single_cell_data, q_eval):
     """
     Interpolates voltage, temperature and time over reference capacities
     (defined in `q_eval`).
     ('q_eval' needs modifying between charge and discharge)
     Stores time series from each cycle in a dataframe.
     """
-    df_list = []
-    max_cycle = max([int(i) for i in single_cell_data.keys()])
+    df_list, original_df_list = [], []
+
     # iterate over each cycle in data
     for cycle_key, time_series in tqdm.tqdm(single_cell_data.items()):
         cycle_num = int(cycle_key)
 
         if cycle_num < 1:
             continue
-        if cycle_num >= max_cycle:
+        if cycle_num >= MAX_CYCLE:
             continue
         df = pd.DataFrame(
             {
@@ -394,6 +399,10 @@ def _get_interpolated_normalized_charge_data(single_cell_data, q_eval):
                 "Qc": time_series["Qc"]
             }
         )
+        df['Cycle'] = cycle_num
+        df['Cell'] = cell_id
+
+        original_df_list.append(df)
 
         # drop duplicates to be able to interpolate over capacity
         df = df.drop_duplicates(subset="Qc")
@@ -404,6 +413,7 @@ def _get_interpolated_normalized_charge_data(single_cell_data, q_eval):
         df["V_norm"] = (df.V - VOLTAGE_MIN) / (VOLTAGE_MAX - VOLTAGE_MIN)
         df["T_norm"] = (df.temp - TEMPERATURE_MIN) / (TEMPERATURE_MAX - TEMPERATURE_MIN)
         df["Qc"] = (df.Qc - df.Qc.min()) / (df.Qc.max() - df.Qc.min())
+
         interp_df = pd.DataFrame()
 
         # use capacity as reference to interpolate over
@@ -411,29 +421,25 @@ def _get_interpolated_normalized_charge_data(single_cell_data, q_eval):
 
         fV = interp1d(x=df.Qc.values, y=df.V_norm.values)
         interp_df["V_norm"] = fV(q_eval)
-        if (np.diff(interp_df.V_norm[np.where(q_eval==0.1)[0][0]:np.where(q_eval==0.8)[0][0]]) < 0).any():
+
+        # TODO: add comments about logic why these are anomalies
+        if (np.diff(interp_df.V_norm[np.where(q_eval == 0.1)[0][0]:np.where(q_eval == 0.8)[0][0]]) < 0).any():
             continue
-        if (len(np.where(abs(interp_df.V_norm-3.6)<1e-3))>3):
+        if len(np.where(abs(interp_df.V_norm - 3.6) < 1e-3)) > 3:
             continue
 
         fT = interp1d(x=df.Qc, y=df["T_norm"])
         interp_df["T_norm"] = fT(q_eval)
+
         # judge if datapoints are usable with temperature, which should not fluctuate during charging
         # range (0.2,0.8)
-        if (np.diff(interp_df.T_norm[np.where(q_eval==0.1)[0][0]:np.where(q_eval==0.8)[0][0]]) < 0).any():
-            continue        
-        # temp=0
-        # for j in range(np.where(q_eval==0.1)[0][0],np.where(q_eval==0.8)[0][0]):
-        #     if interp_df.T_norm[j]>interp_df.T_norm[j+1]:
-        #         temp=1
-        #         continue
-        # if(temp==1):
-        #     continue
+        if (np.diff(interp_df.T_norm[np.where(q_eval == 0.1)[0][0]:np.where(q_eval == 0.8)[0][0]]) < 0).any():
+            continue
 
-        interp_df["Cycle"] = [cycle_num / max_cycle for i in range(len(interp_df))]
+        interp_df["Cycle"] = [cycle_num / MAX_CYCLE for i in range(len(interp_df))]
 
         df_list.append(interp_df)
-    return df_list
+    return df_list, original_df_list
 
 
 def _split_sequences(sequences, n_steps, n_outputs, nf_steps):
@@ -446,9 +452,9 @@ def _split_sequences(sequences, n_steps, n_outputs, nf_steps):
         end_ix = i + n_steps
         # gather input and output parts of the pattern
         seq_x, seq_y = (
-             sequences[i: end_ix - 1, :-n_outputs],
-             [sequences[end_ix - 1 + j, -n_outputs:] for j in np.arange(nf_steps)] ,
-         )
+            sequences[i: end_ix - 1, :-n_outputs],
+            [sequences[end_ix - 1 + j, -n_outputs:] for j in np.arange(nf_steps)],
+        )
         X.append(seq_x)
         y.append(seq_y)
     return np.array(X), np.array(y)
@@ -461,8 +467,9 @@ def _get_single_cell_inputs(
     Helper function to preprocess time series inputs for a single cell (battery).
     """
     X_list, y_list = [], []
-    if (q_eval[1]==REFERENCE_DISCHARGE_CAPACITIES[1] and q_eval[2]==REFERENCE_DISCHARGE_CAPACITIES[2]):
-        df_list, original_df_list = _get_interpolated_normalized_discharge_data(cell_id, single_cell_data, q_eval=q_eval)
+    if (q_eval[1] == REFERENCE_DISCHARGE_CAPACITIES[1] and q_eval[2] == REFERENCE_DISCHARGE_CAPACITIES[2]):
+        df_list, original_df_list = _get_interpolated_normalized_discharge_data(cell_id, single_cell_data,
+                                                                                q_eval=q_eval)
     else:
         df_list, original_df_list = _get_interpolated_normalized_charge_data(cell_id, single_cell_data, q_eval=q_eval)
         # print(len(df_list))
@@ -487,8 +494,8 @@ def _get_single_cell_inputs(
 
         # convert into input/output
         X_cycle, y_cycle = _split_sequences(
-             dataset, history_window, n_outputs=len(output_columns), nf_steps=forecast_horizon
-         )
+            dataset, history_window, n_outputs=len(output_columns), nf_steps=forecast_horizon
+        )
         X_list.append(X_cycle)
         y_list.append(y_cycle)
 
