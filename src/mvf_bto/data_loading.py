@@ -3,7 +3,7 @@ import tqdm
 import numpy as np
 
 
-def load_data(file_path, num_cells=None):
+def load_data(file_path, num_cells):
     """
     Loads battery cycling data from a .mat file.
     Parameters
@@ -29,19 +29,17 @@ def load_data(file_path, num_cells=None):
     f = h5py.File(file_path)
     batch = f["batch"]
     bat_dict = {}
-    if num_cells is None:
-        num_cells = batch["summary"].shape[0]
     for i in tqdm.tqdm(range(num_cells)):
         cl = f[batch["cycle_life"][i, 0]][()]
         policy = f[batch["policy_readable"][i, 0]][()].tobytes()[::2].decode()
-        summary_IR = np.hstack(f[batch["summary"][i, 0]]["IR"][0, :].tolist())
-        summary_QC = np.hstack(f[batch["summary"][i, 0]]["QCharge"][0, :].tolist())
-        summary_QD = np.hstack(f[batch["summary"][i, 0]]["QDischarge"][0, :].tolist())
-        summary_TA = np.hstack(f[batch["summary"][i, 0]]["Tavg"][0, :].tolist())
-        summary_TM = np.hstack(f[batch["summary"][i, 0]]["Tmin"][0, :].tolist())
-        summary_TX = np.hstack(f[batch["summary"][i, 0]]["Tmax"][0, :].tolist())
-        summary_CT = np.hstack(f[batch["summary"][i, 0]]["chargetime"][0, :].tolist())
-        summary_CY = np.hstack(f[batch["summary"][i, 0]]["cycle"][0, :].tolist())
+        summary_IR = f[batch["summary"][i, 0]]["IR"][0, :]
+        summary_QC = f[batch["summary"][i, 0]]["QCharge"][0, :]
+        summary_QD = f[batch["summary"][i, 0]]["QDischarge"][0, :]
+        summary_TA = f[batch["summary"][i, 0]]["Tavg"][0, :]
+        summary_TM = f[batch["summary"][i, 0]]["Tmin"][0, :]
+        summary_TX = f[batch["summary"][i, 0]]["Tmax"][0, :]
+        summary_CT = f[batch["summary"][i, 0]]["chargetime"][0, :]
+        summary_CY = f[batch["summary"][i, 0]]["cycle"][0, :]
         summary = {
             "IR": summary_IR,
             "QC": summary_QC,
@@ -55,15 +53,15 @@ def load_data(file_path, num_cells=None):
         cycles = f[batch["cycles"][i, 0]]
         cycle_dict = {}
         for j in range(cycles["I"].shape[0]):
-            I = np.hstack((f[cycles["I"][j, 0]][()]))
-            Qc = np.hstack((f[cycles["Qc"][j, 0]][()]))
-            Qd = np.hstack((f[cycles["Qd"][j, 0]][()]))
-            Qdlin = np.hstack((f[cycles["Qdlin"][j, 0]][()]))
-            T = np.hstack((f[cycles["T"][j, 0]][()]))
-            Tdlin = np.hstack((f[cycles["Tdlin"][j, 0]][()]))
-            V = np.hstack((f[cycles["V"][j, 0]][()]))
-            dQdV = np.hstack((f[cycles["discharge_dQdV"][j, 0]][()]))
-            t = np.hstack((f[cycles["t"][j, 0]][()]))
+            I = f[cycles["I"][j, 0]][()]
+            Qc = f[cycles["Qc"][j, 0]][()]
+            Qd = f[cycles["Qd"][j, 0]][()]
+            Qdlin = f[cycles["Qdlin"][j, 0]][()]
+            T = f[cycles["T"][j, 0]][()]
+            Tdlin = f[cycles["Tdlin"][j, 0]][()]
+            V = f[cycles["V"][j, 0]][()]
+            dQdV = f[cycles["discharge_dQdV"][j, 0]][()]
+            t = f[cycles["t"][j, 0]][()]
             cd = {
                 "I": I,
                 "Qc": Qc,
