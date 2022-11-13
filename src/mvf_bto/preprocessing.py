@@ -18,7 +18,9 @@ from mvf_bto.constants import (
 )
 
 DEFAULT_FEATURES = ["T_norm", "Q_eval", "V_norm", "Cycle"]
-DEFAULT_TARGETS = ["V_norm", "T_norm"]
+# DEFAULT_TARGETS = ["V_norm", "T_norm"]
+DEFAULT_TARGETS= ["T_norm", "Q_eval", "V_norm", "Cycle"]
+
 BLACKLISTED_CELL = ["b1c3", "b1c8"]
 
 
