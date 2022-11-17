@@ -13,6 +13,13 @@ MAX_CYCLE = 2300
 MAX_DISCHARGE_CURRENT = -3.98
 MIN_DISCHARGE_CURRENT = -4.05
 
+# default feature and target column labels
+DEFAULT_FEATURES = ["T_norm", "Q_eval", "V_norm", "Cycle"]
+DEFAULT_TARGETS = ["V_norm", "T_norm"]
+
+# cells with corrupted temperature data
+BLACKLISTED_CELL = ["b1c3", "b1c8"]
+
 # charging current
 MIN_CHARGE_CURRENT = 0.0
 
@@ -50,6 +57,3 @@ Qc_eval = np.append(Qc_eval, np.linspace(0.8, 0.85, 11))
 Qc_eval = np.append(Qc_eval, np.linspace(0.85, 0.98, 14))
 Qc_eval = np.append(Qc_eval, np.linspace(0.98, 1.00, 2))
 REFERENCE_CHARGE_CAPACITIES = Qc_eval
-
-# cells with corrupted temperature data
-BLACKLISTED_CELL = ["b1c3", "b1c8"]
