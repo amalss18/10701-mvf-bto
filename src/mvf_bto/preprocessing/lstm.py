@@ -57,7 +57,9 @@ def create_discharge_inputs(
                 batch_size.)
     """
 
-    train_cells, validation_cells, test_cells = split_train_validation_test_sets(data=data)
+    train_cells, validation_cells, test_cells = split_train_validation_test_sets(data=data,
+                                                                                 train_split=train_split,
+                                                                                 test_split=test_split)
 
     X_train_list, X_test_list, X_val_list = [], [], []
     y_train_list, y_test_list, y_val_list = [], [], []

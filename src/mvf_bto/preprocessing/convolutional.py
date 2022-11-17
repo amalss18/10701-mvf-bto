@@ -1,9 +1,6 @@
 import numpy as np
 import pandas as pd
-import random
 import tqdm
-from scipy.interpolate import interp1d
-import sys
 from mvf_bto.constants import (
     VOLTAGE_MIN,
     VOLTAGE_MAX,
@@ -11,11 +8,11 @@ from mvf_bto.constants import (
     TEMPERATURE_MAX,
     MAX_DISCHARGE_CURRENT,
     MIN_DISCHARGE_CURRENT,
-    MIN_CHARGE_CURRENT,
     REFERENCE_DISCHARGE_CAPACITIES,
-    REFERENCE_CHARGE_CAPACITIES,
     MAX_CYCLE
 )
+from mvf_bto.preprocessing.utils import split_train_validation_test_sets
+from scipy.interpolate import interp1d
 
 DEFAULT_FEATURES = ["T_norm", "Q_eval", "V_norm", "Cycle"]
 DEFAULT_TARGETS = ["V_norm", "T_norm"]
@@ -93,3 +90,97 @@ def _get_interpolated_normalized_discharge_data(cell_id, single_cell_data, q_eva
 
         df_list.append(interp_df)
     return df_list, original_df_list
+
+
+def _dataframe_to_input_arrays(full_df, inputs_list, outputs_list, history_window, forecast_horizon):
+    n_outputs = len(outputs_list)
+
+    dataset_list = []
+    # define input sequences
+    for feature in inputs_list:
+        in_seq = full_df[feature].values
+        in_seq = in_seq.reshape((len(in_seq), 1))
+        dataset_list.append(in_seq)
+
+    # convert to [rows, columns] structure
+    # by horizontally stacking columns
+    dataset = np.hstack(tuple(dataset_list))
+    # choose a number of time steps
+    # convert into input/output
+    X, y = _split_sequences(sequences=dataset, n_steps_in=history_window, n_steps_out=forecast_horizon,
+                            n_outputs=n_outputs)
+    # flatten output
+    y = y.reshape((y.shape[0], n_outputs))
+    return X, y
+
+
+def create_discharge_datasets(
+        data,
+        train_split,
+        test_split,
+        input_columns=DEFAULT_FEATURES,
+        output_columns=DEFAULT_TARGETS,
+        history_window=4,
+        forecast_horizon=1
+):
+    train_cells, validation_cells, test_cells = split_train_validation_test_sets(data=data,
+                                                                                 train_split=train_split,
+                                                                                 test_split=test_split)
+
+    train_df_list, train_odf_list = [], []
+    for cell_id in train_cells:
+        single_cell_data = data[cell_id]['cycles']
+        df_list, original_df_list = _get_interpolated_normalized_discharge_data(cell_id, single_cell_data,
+                                                                                q_eval=REFERENCE_DISCHARGE_CAPACITIES)
+        train_df_list.extend(df_list)
+        train_odf_list.extend(original_df_list)
+    full_train_df = pd.concat(train_df_list)
+    X_train, y_train = _dataframe_to_input_arrays(full_train_df,
+                                                  inputs_list=input_columns,
+                                                  outputs_list=output_columns,
+                                                  history_window=history_window,
+                                                  forecast_horizon=forecast_horizon)
+
+    test_df_list, test_odf_list = [], []
+    for cell_id in test_cells:
+        single_cell_data = data[cell_id]['cycles']
+        df_list, original_df_list = _get_interpolated_normalized_discharge_data(cell_id, single_cell_data,
+                                                                                q_eval=REFERENCE_DISCHARGE_CAPACITIES)
+        test_df_list.extend(df_list)
+        test_odf_list.extend(original_df_list)
+
+    full_test_df = pd.concat(test_df_list)
+    X_test, y_test = _dataframe_to_input_arrays(full_test_df,
+                                                inputs_list=input_columns,
+                                                outputs_list=output_columns,
+                                                history_window=history_window,
+                                                forecast_horizon=forecast_horizon)
+
+    val_df_list, val_odf_list = [], []
+    for cell_id in validation_cells:
+        single_cell_data = data[cell_id]['cycles']
+        df_list, original_df_list = _get_interpolated_normalized_discharge_data(cell_id, single_cell_data,
+                                                                                q_eval=REFERENCE_DISCHARGE_CAPACITIES)
+        val_df_list.extend(df_list)
+        val_odf_list.extend(original_df_list)
+
+    full_val_df = pd.concat(test_df_list)
+    X_val, y_val = _dataframe_to_input_arrays(full_val_df,
+                                              inputs_list=input_columns,
+                                              outputs_list=output_columns,
+                                              history_window=history_window,
+                                              forecast_horizon=forecast_horizon)
+
+    return {
+               "X_train": X_train,
+               "X_test": X_test,
+               "X_val": X_val,
+               "y_train": y_train,
+               "y_test": y_test,
+               "y_val": y_val,
+               "original_test": pd.concat(train_odf_list),
+               "original_val": pd.concat(val_odf_list),
+               "original_train": pd.concat(test_odf_list),
+               "n_output": y_train.shape[1] * y_train.shape[2],
+               "n_features": X_train.shape[2]
+           },
