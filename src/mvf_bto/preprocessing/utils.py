@@ -21,8 +21,8 @@ def split_train_validation_test_sets(data, train_split, test_split):
 
     train_cells, test_cells, validation_cells = (
         cell_ids[:n_train],
-        cell_ids[n_train: n_train + n_test],
-        cell_ids[n_train + n_test:],
+        cell_ids[n_train : n_train + n_test],
+        cell_ids[n_train + n_test :],
     )
 
     if len(cell_ids) == 2:
