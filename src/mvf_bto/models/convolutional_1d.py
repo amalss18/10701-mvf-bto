@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 
-class CNN1D(tf.keras.Model):
+class Convolutional1D(tf.keras.Model):
     def __init__(
         self,
         input_shape,
