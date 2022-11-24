@@ -14,7 +14,8 @@ from mvf_bto.constants import (
     MIN_CHARGE_CURRENT,
     REFERENCE_DISCHARGE_CAPACITIES,
     REFERENCE_CHARGE_CAPACITIES,
-    MAX_CYCLE
+    MAX_CYCLE,
+    MAX_DISCHARGE_CAPACITY
 )
 
 DEFAULT_FEATURES = ["T_norm", "Q_eval", "V_norm", "Cycle"]
@@ -349,7 +350,7 @@ def _get_interpolated_normalized_discharge_data(cell_id, single_cell_data, q_eva
 
         df["V_norm"] = (df.V - VOLTAGE_MIN) / (VOLTAGE_MAX - VOLTAGE_MIN)
         df["T_norm"] = (df.temp - TEMPERATURE_MIN) / (TEMPERATURE_MAX - TEMPERATURE_MIN)
-        df["Qd"] = (df.Qd - df.Qd.min()) / (df.Qd.max() - df.Qd.min())
+        df["Qd"] = df.Qd / (MAX_DISCHARGE_CAPACITY - df.Qd.min())
         interp_df = pd.DataFrame()
 
         # use capacity as reference to interpolate over

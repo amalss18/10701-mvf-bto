@@ -16,13 +16,14 @@ from mvf_bto.constants import (
     MAX_DISCHARGE_CURRENT,
     MIN_DISCHARGE_CURRENT,
     REFERENCE_CHARGE_CAPACITIES,
-    MAX_CYCLE
+    MAX_CYCLE,
+    MAX_CHARGE_CAPACITY
 )
 
 DEFAULT_FEATURES = ["T_norm", "Q_eval", "V_norm", "Cycle", "C_rate1", "SOC1", "C_rate2"]
 DEFAULT_TARGETS = ["V_norm", "T_norm"]
-BLACKLISTED_CELL = ["b1c3", "b1c8"]
-
+# BLACKLISTED_CELL = ["b1c3", "b1c8"]
+double_V_drop = ['b1c8']
 
 def create_charge_inputs(
         data,
@@ -76,68 +77,64 @@ def create_charge_inputs(
     X_train_list, X_test_list, X_val_list = [], [], []
     y_train_list, y_test_list, y_val_list = [], [], []
 
-    if(q_eval.any()==None):
-        soc = float(re.findall(r"\d*\.*\d+",data[cell_id]["charge_policy"])[1])/100.0
-        q_eval = np.linspace(0,0.1,11)
-        q_eval = np.append(q_eval, np.linspace(0.2,soc,int(math.floor((soc-0.2)/0.1+1))))
-        q_eval = np.append(q_eval, np.linspace(soc+0.005,soc+0.05,10))
-        q_eval = np.append(q_eval, np.linspace(soc+0.06,1.0-0.02,math.floor(1.0-0.02-soc-0.06)/0.01+1))
-        q_eval = np.append(q_eval, np.linspace(0.99,1.00,2))
-        # q_eval=np.linspace(0,1,201)
-
     original_train_dfs = []
+    train_dfs = []
     fig_list=[]
     for cell_id in train_cells:
-        X_cell_list, y_cell_list, original_df_list, fig = _get_single_cell_inputs(
+        X_cell_list, y_cell_list, original_df_list, df_list, fig = _get_single_cell_inputs(
             cell_id=cell_id,
             single_cell_data=data[cell_id]["cycles"],
             policy=data[cell_id]["charge_policy"],
             input_columns=input_columns,
             output_columns=output_columns,
             history_window=history_window,
-            q_eval=q_eval,
+            q_eval=None,
             forecast_horizon=forecast_horizon
         )
         X_train_list.extend(X_cell_list)
         y_train_list.extend(y_cell_list)
         original_train_dfs.extend(original_df_list)
+        train_dfs.extend(df_list)
         fig_list.append(fig)
 
     original_test_dfs = []
+    test_dfs = []
     for cell_id in test_cells:
-        X_cell_list, y_cell_list, original_df_list, fig = _get_single_cell_inputs(
+        X_cell_list, y_cell_list, original_df_list, df_list, fig = _get_single_cell_inputs(
             cell_id=cell_id,
             single_cell_data=data[cell_id]["cycles"],
             policy=data[cell_id]["charge_policy"],
             input_columns=input_columns,
             output_columns=output_columns,
             history_window=history_window,
-            q_eval=q_eval,
+            q_eval=None,
             forecast_horizon=forecast_horizon,
         )
         X_test_list.extend(X_cell_list)
         y_test_list.extend(y_cell_list)
         original_test_dfs.extend(original_df_list)
+        test_dfs.extend(df_list)
         fig_list.append(fig)
 
     original_val_dfs = []
+    val_dfs = []
     if len(validation_cells):
         for cell_id in validation_cells:
-            X_cell_list, y_cell_list, original_df_list, fig = _get_single_cell_inputs(
+            X_cell_list, y_cell_list, original_df_list, df_list, fig = _get_single_cell_inputs(
                 cell_id=cell_id,
                 single_cell_data=data[cell_id]["cycles"],
                 policy=data[cell_id]["charge_policy"],
                 input_columns=input_columns,
                 output_columns=output_columns,
                 history_window=history_window,
-                q_eval=q_eval,
+                q_eval=None,
                 forecast_horizon=forecast_horizon,
             )
             X_val_list.extend(X_cell_list)
             y_val_list.extend(y_cell_list)
             original_val_dfs.extend(original_df_list)
+            val_dfs.extend(df_list)
             fig_list.append(fig)
-
     batch_size = X_train_list[0].shape[0]
     X_train = np.array(X_train_list)
     X_test = np.array(X_test_list)
@@ -147,19 +144,27 @@ def create_charge_inputs(
     y_test = np.array(y_test_list)
     y_val = np.array(y_val_list)
 
-    X_train = X_train.reshape(
-        X_train.shape[0] * batch_size, X_train[0].shape[1], X_train.shape[-1]
-    )
-    X_test = X_test.reshape(
-        X_test.shape[0] * batch_size, X_test[0].shape[1], X_test.shape[-1]
-    )
-    X_val = X_val.reshape(
-        X_val.shape[0] * batch_size, X_val[0].shape[1], X_val.shape[-1]
-    )
-
-    y_train = y_train.reshape(y_train.shape[0] * y_train.shape[1], y_val.shape[2], y_train.shape[-1])
-    y_test = y_test.reshape(y_test.shape[0] * y_test.shape[1], y_val.shape[2], y_test.shape[-1])
-    y_val = y_val.reshape(y_val.shape[0] * y_val.shape[1], y_val.shape[2], y_val.shape[-1])
+    if(len(X_train)):
+        X_train = X_train.reshape(
+            X_train.shape[0] * batch_size, X_train[0].shape[1], X_train.shape[-1]
+        )
+        y_train = y_train.reshape(y_train.shape[0] * y_train.shape[1], y_train.shape[2], y_train.shape[-1])
+    else:
+        print('no training cells!')
+    if(len(X_test)):
+        X_test = X_test.reshape(
+            X_test.shape[0] * batch_size, X_test[0].shape[1], X_test.shape[-1]
+        )
+        y_test = y_test.reshape(y_test.shape[0] * y_test.shape[1], y_test.shape[2], y_test.shape[-1])
+    else:
+        print('no test cells!')
+    if(len(X_val)):
+        X_val = X_val.reshape(
+            X_val.shape[0] * batch_size, X_val[0].shape[1], X_val.shape[-1]
+        )
+        y_val = y_val.reshape(y_val.shape[0] * y_val.shape[1], y_val.shape[2], y_val.shape[-1])
+    else:
+        print('no validation cells!')
 
     return {
                "X_train": X_train,
@@ -171,9 +176,12 @@ def create_charge_inputs(
                "original_test": pd.concat(original_test_dfs),
                "original_val": pd.concat(original_val_dfs),
                "original_train": pd.concat(original_train_dfs),
+               "train_dfs": pd.concat(train_dfs),
+               "test_dfs": pd.concat(test_dfs),
+               "val_dfs": pd.concat(val_dfs),
                "batch_size": batch_size,
                "fig_list": fig_list,
-               "q_eval": q_eval
+            #    "q_eval": q_eval
            }
 
 
@@ -181,15 +189,22 @@ def _get_interpolated_normalized_charge_data(cell_id, single_cell_data, policy, 
     """
     Interpolates voltage, temperature and time over reference capacities
     (defined in `q_eval`).
-    ('q_eval' needs modifying between charge and discharge)
     Stores time series from each cycle in a dataframe.
     """
     df_list, original_df_list = [], []
-
+    if (not (q_eval is None)):
+        flag=True
+    else:
+        flag=False
     # iterate over each cycle in data
     fig=go.Figure()
     for cycle_key, time_series in tqdm.tqdm(single_cell_data.items()):
         cycle_num = int(cycle_key)
+
+        # make sure q_eval is none if it is specified as none when called
+        # flag=True -> q_eval not none
+        if (flag==False and not (q_eval is None)):
+            q_eval=None
 
         if cycle_num < 1:
             continue
@@ -227,14 +242,48 @@ def _get_interpolated_normalized_charge_data(cell_id, single_cell_data, policy, 
 
         df["V_norm"] = (df.V - VOLTAGE_MIN) / (VOLTAGE_MAX - VOLTAGE_MIN)
         df["T_norm"] = (df.temp - TEMPERATURE_MIN) / (TEMPERATURE_MAX - TEMPERATURE_MIN)
-        df["Qc"] = (df.Qc - df.Qc.min()) / (df.Qc.max() - df.Qc.min())
+        df["Qc"] = df.Qc / MAX_CHARGE_CAPACITY
 
         interp_df = pd.DataFrame()
-
+        # print('get interpolated normalized',q_eval)
+        if(q_eval is None):
+            soc=[]
+            # Q_where_V_drop=[]
+            V_drop_index=np.where(np.diff(df["V_norm"].values)<-1e-4)[0]
+            # if(cycle_num==612 and cell_id=='b1c5'):
+            #     print(len(V_drop_index))
+            #     print(V_drop_index)
+            # V_drop_index=np.delete(V_drop_index,-1)
+            # for charge step with only one voltage drop
+            if (not (cell_id in double_V_drop)):
+                q_eval = np.linspace(0,0.1,11)
+                q_eval = np.append(q_eval, np.linspace(0.2,df['Qc'].values[V_drop_index[0]],7))
+                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[0]+1], df['Qc'].values[V_drop_index[0]+16],15))
+                # q_eval = np.append(q_eval, np.array(df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)<10)[0]]]))
+                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[0]+17], max(df['Qc'].values)-0.01,10))
+                # q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)<10)[0][-1]+1]],df['Qc'].values[V_drop_index[-1]],10))
+                # q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[-1]+1],max(df['Qc'].values)-0.01,10))
+                q_eval = np.append(q_eval, np.linspace(max(df['Qc'].values)-0.01,max(df['Qc'].values),50-len(q_eval)))
+            # for charge step with 2 voltage drop
+            elif (cell_id in double_V_drop):
+                q_eval = np.linspace(0,0.1,11)
+                q_eval = np.append(q_eval, np.linspace(0.2,df['Qc'].values[V_drop_index[0]],7))
+                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[0]+1], df['Qc'].values[V_drop_index[0]+6],5))
+                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[0]+7], df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]]],10))
+                # q_eval = np.append(q_eval, np.array(df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)<10)]]))
+                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]]+1],df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]]+6],5))
+                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]]+7],max(df['Qc'].values)-0.01,5))
+                # q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[-1]+1],max(df['Qc'].values)-0.01,10))
+                q_eval = np.append(q_eval, np.linspace(max(df['Qc'].values)-0.01,max(df['Qc'].values),50-len(q_eval)))
+        else:
+            raise RuntimeError('q_eval not none')
+        if(len(q_eval)>50):
+            raise RuntimeError('check q_eval length (should be less than 50)')
         # use capacity as reference to interpolate over
         interp_df["Q_eval"] = q_eval
-
-        fV = interp1d(x=df.Qc.values, y=df.V_norm.values)
+        # if(q_eval.min()<df.Qc.min()):
+            # print(cycle_num, cell_id, q_eval.min(),q_eval.max(), df.Qc.min(),df.Qc.max())
+        fV = interp1d(x=df.Qc.values, y=df.V_norm.values, fill_value='extrapolate')
         interp_df["V_norm"] = fV(q_eval)
 
         # TODO: add comments about logic why these are anomalies
@@ -243,20 +292,21 @@ def _get_interpolated_normalized_charge_data(cell_id, single_cell_data, policy, 
         # if len(np.where(abs(interp_df.V_norm - 3.6) < 1e-3)) > 3:
         #     continue
 
-        fT = interp1d(x=df.Qc, y=df["T_norm"])
+        fT = interp1d(x=df.Qc, y=df["T_norm"], fill_value='extrapolate')
         interp_df["T_norm"] = fT(q_eval)
 
         # judge if datapoints are usable with temperature, which should not fluctuate during charging
         # range (0.2,0.8)
-        # if (np.diff(interp_df.T_norm[np.where(q_eval == 0.1)[0][0]:np.where(q_eval == df["SOC1"].values[0])[0][0]]) < 0).any():
-        #     fig.add_trace(go.Scatter(x=interp_df.Q_eval, y=interp_df.T_norm))
-        #     continue
+        if (np.diff(interp_df.T_norm[np.where(q_eval == 0.1)[0][0]:np.where(q_eval == df['Qc'].values[V_drop_index[0]])[0][0]]) < 0).any():
+            fig.add_trace(go.Scatter(x=interp_df.Q_eval, y=interp_df.T_norm))
+            continue
 
 
         interp_df["Cycle"] = [cycle_num / MAX_CYCLE for i in range(len(interp_df))]
         interp_df["C_rate1"] = [float(re.findall(r"\d*\.*\d+",policy)[0]) for i in range(len(interp_df))]
         interp_df["SOC1"] = [float(re.findall(r"\d*\.*\d+",policy)[1])/100.0 for i in range(len(interp_df))]
         interp_df["C_rate2"] = [float(re.findall(r"\d*\.*\d+",policy)[2]) for i in range(len(interp_df))]
+        interp_df["Cell"] = [cell_id for i in range(len(interp_df))]
 
         df_list.append(interp_df)
         original_df_list.append(temp_df)        
@@ -288,6 +338,7 @@ def _get_single_cell_inputs(
     Helper function to preprocess time series inputs for a single cell (battery).
     """
     X_list, y_list = [], []
+    # print('get single',q_eval)
     df_list, original_df_list,fig = _get_interpolated_normalized_charge_data(cell_id, single_cell_data, policy, q_eval=q_eval)
     for df in df_list:
         sequence_list = []
@@ -315,4 +366,4 @@ def _get_single_cell_inputs(
         X_list.append(X_cycle)
         y_list.append(y_cycle)
 
-    return X_list, y_list, original_df_list, fig
+    return X_list, y_list, original_df_list, df_list, fig
