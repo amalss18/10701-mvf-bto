@@ -53,16 +53,16 @@ class LSTMAutoregression(tf.keras.Model):
         self.lstm_cell = tf.keras.layers.LSTMCell(lstm1_units)
         self.lstm_rnn = tf.keras.layers.RNN(self.lstm_cell, return_state=True)
 
-        # self.dense_1 = tf.keras.layers.Dense(units=dense1_units, activation="relu")
-        # self.dense_2 = tf.keras.layers.Dense(units=dense2_units)
+        self.dense_1 = tf.keras.layers.Dense(units=dense1_units, activation="relu")
+        self.dense_2 = tf.keras.layers.Dense(units=dense2_units)
         self.dense_3 = tf.keras.layers.Dense(units=nf_steps*n_outputs)
         # self.output_layer = tf.keras.layers.Reshape([nf_steps, n_outputs])
     
     def warmup(self, inputs):
         x, *state = self.lstm_rnn(inputs)
 
-        # x = self.dense_1(x)
-        # x = self.dense_2(x)
+        x = self.dense_1(x)
+        x = self.dense_2(x)
         prediction = self.dense_3(x)
         # prediction = self.output_layer(prediction)
 
@@ -80,8 +80,8 @@ class LSTMAutoregression(tf.keras.Model):
             x = prediction
 
             x, state = self.lstm_cell(x, states=state, training=training)
-            # x = self.dense_1(x)
-            # x = self.dense_2(x)
+            x = self.dense_1(x)
+            x = self.dense_2(x)
             prediction = self.dense_3(x)
             # prediction = self.output_layer(prediction)
 
