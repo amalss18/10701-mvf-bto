@@ -62,7 +62,7 @@ def create_charge_inputs(
                 batch_size.)
     """
     cell_ids = list(data.keys())
-    # random.shuffle(cell_ids)
+    random.shuffle(cell_ids)
 
     n_train = int(train_split * len(cell_ids))
     n_test = int(test_split * len(cell_ids))
@@ -248,6 +248,7 @@ def _get_interpolated_normalized_charge_data(cell_id, single_cell_data, policy, 
         # print('get interpolated normalized',q_eval)
         if(q_eval is None):
             soc=[]
+            max_interp_num=35
             # Q_where_V_drop=[]
             V_drop_index=np.where(np.diff(df["V_norm"].values)<-1e-4)[0]
             # if(cycle_num==612 and cell_id=='b1c5'):
@@ -256,28 +257,28 @@ def _get_interpolated_normalized_charge_data(cell_id, single_cell_data, policy, 
             # V_drop_index=np.delete(V_drop_index,-1)
             # for charge step with only one voltage drop
             if (not (cell_id in double_V_drop)):
-                q_eval = np.linspace(0,0.1,11)
-                q_eval = np.append(q_eval, np.linspace(0.2,df['Qc'].values[V_drop_index[0]],7))
-                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[0]+1], df['Qc'].values[V_drop_index[0]+16],15))
+                q_eval = np.linspace(0,0.1,8)
+                q_eval = np.append(q_eval, np.linspace(0.2,df['Qc'].values[V_drop_index[0]-1],4))
+                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[0]-1], df['Qc'].values[V_drop_index[0]+2],3))
                 # q_eval = np.append(q_eval, np.array(df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)<10)[0]]]))
-                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[0]+17], max(df['Qc'].values)-0.01,10))
+                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[0]+4], max(df['Qc'].values)-0.01,10))
                 # q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)<10)[0][-1]+1]],df['Qc'].values[V_drop_index[-1]],10))
                 # q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[-1]+1],max(df['Qc'].values)-0.01,10))
-                q_eval = np.append(q_eval, np.linspace(max(df['Qc'].values)-0.01,max(df['Qc'].values),50-len(q_eval)))
+                q_eval = np.append(q_eval, np.linspace(max(df['Qc'].values)-0.01,max(df['Qc'].values),max_interp_num-len(q_eval)))
             # for charge step with 2 voltage drop
             elif (cell_id in double_V_drop):
-                q_eval = np.linspace(0,0.1,11)
-                q_eval = np.append(q_eval, np.linspace(0.2,df['Qc'].values[V_drop_index[0]],7))
-                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[0]+1], df['Qc'].values[V_drop_index[0]+6],5))
-                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[0]+7], df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]]],10))
+                q_eval = np.linspace(0,0.1,8)
+                q_eval = np.append(q_eval, np.linspace(0.2,df['Qc'].values[V_drop_index[0]-1],4))
+                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[0]-1], df['Qc'].values[V_drop_index[0]+2],3))
+                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[0]+4], df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]-1]],6))
                 # q_eval = np.append(q_eval, np.array(df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)<10)]]))
-                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]]+1],df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]]+6],5))
-                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]]+7],max(df['Qc'].values)-0.01,5))
+                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]]],df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]]+2],3))
+                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]]+4],max(df['Qc'].values)-0.01,5))
                 # q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[-1]+1],max(df['Qc'].values)-0.01,10))
-                q_eval = np.append(q_eval, np.linspace(max(df['Qc'].values)-0.01,max(df['Qc'].values),50-len(q_eval)))
+                q_eval = np.append(q_eval, np.linspace(max(df['Qc'].values)-0.01,max(df['Qc'].values),max_interp_num-len(q_eval)))
         else:
             raise RuntimeError('q_eval not none')
-        if(len(q_eval)>50):
+        if(len(q_eval)>max_interp_num):
             raise RuntimeError('check q_eval length (should be less than 50)')
         # use capacity as reference to interpolate over
         interp_df["Q_eval"] = q_eval
@@ -297,7 +298,7 @@ def _get_interpolated_normalized_charge_data(cell_id, single_cell_data, policy, 
 
         # judge if datapoints are usable with temperature, which should not fluctuate during charging
         # range (0.2,0.8)
-        if (np.diff(interp_df.T_norm[np.where(q_eval == 0.1)[0][0]:np.where(q_eval == df['Qc'].values[V_drop_index[0]])[0][0]]) < 0).any():
+        if (np.diff(interp_df.T_norm[np.where(q_eval == 0.1)[0][0]:np.where(q_eval == df['Qc'].values[V_drop_index[0]-1])[0][0]]) < 0).any():
             fig.add_trace(go.Scatter(x=interp_df.Q_eval, y=interp_df.T_norm))
             continue
 
