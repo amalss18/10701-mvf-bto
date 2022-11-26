@@ -24,6 +24,7 @@ BLACKLISTED_CELL = ["b1c3", "b1c8"]
 MIN_CHARGE_CURRENT = 0.0
 
 MAX_DISCHARGE_CAPACITY = 1.6
+MAX_CHARGE_CAPACITY=1.07
 # INTERPOLATION
 # Discharge curve is interpolated over these capacities
 # More points in non-linear regions

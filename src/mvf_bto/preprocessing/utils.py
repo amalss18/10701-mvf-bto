@@ -1,7 +1,7 @@
 import random
-from mvf_bto.constants import BLACKLISTED_CELL
+# from mvf_bto.constants import BLACKLISTED_CELL
 
-
+BLACKLISTED_CELL=[]
 def split_train_validation_test_sets(data, train_split, test_split):
     loaded_cell_ids = list(data.keys())
     cell_ids = []
@@ -13,7 +13,7 @@ def split_train_validation_test_sets(data, train_split, test_split):
         else:
             print(f" Data for cell {cell_id} is corrupted. Skipping cell.")
 
-    random.shuffle(cell_ids)
+    # random.shuffle(cell_ids)
 
     n_train = int(train_split * len(cell_ids))
     n_test = int(test_split * len(cell_ids))
