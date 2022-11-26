@@ -1,6 +1,5 @@
 import tensorflow as tf
 
-
 class BaselineLSTM(tf.keras.Model):
     def __init__(
             self,
@@ -56,7 +55,6 @@ class LSTMAutoregression(tf.keras.Model):
         self.dense_1 = tf.keras.layers.Dense(units=dense1_units, activation="relu")
         self.dense_2 = tf.keras.layers.Dense(units=dense2_units)
         self.dense_3 = tf.keras.layers.Dense(units=nf_steps*n_outputs)
-        # self.output_layer = tf.keras.layers.Reshape([nf_steps, n_outputs])
     
     def warmup(self, inputs):
         x, *state = self.lstm_rnn(inputs)
@@ -64,7 +62,6 @@ class LSTMAutoregression(tf.keras.Model):
         x = self.dense_1(x)
         x = self.dense_2(x)
         prediction = self.dense_3(x)
-        # prediction = self.output_layer(prediction)
 
         return prediction, state        
 
@@ -74,8 +71,6 @@ class LSTMAutoregression(tf.keras.Model):
 
         predictions.append(prediction)
 
-        # print(prediction)
-        # print(state)
         for n in range(1, self.out_steps):
             x = prediction
 
@@ -83,13 +78,10 @@ class LSTMAutoregression(tf.keras.Model):
             x = self.dense_1(x)
             x = self.dense_2(x)
             prediction = self.dense_3(x)
-            # prediction = self.output_layer(prediction)
-
+ 
             predictions.append(prediction)
 
         predictions = tf.stack(predictions)
         predictions = tf.transpose(predictions, [1, 0, 2])
 
         return predictions
-
-
