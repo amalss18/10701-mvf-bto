@@ -18,8 +18,8 @@ from mvf_bto.constants import (
 )
 
 DEFAULT_FEATURES = ["T_norm", "Q_eval", "V_norm", "Cycle"]
-# DEFAULT_TARGETS = ["V_norm", "T_norm"]
-DEFAULT_TARGETS= ["T_norm", "Q_eval", "V_norm", "Cycle"]
+DEFAULT_TARGETS = ["V_norm", "T_norm"]
+DEFAULT_TARGETS_AUTO = ["T_norm", "Q_eval", "V_norm", "Cycle"]
 
 BLACKLISTED_CELL = ["b1c3", "b1c8"]
 
@@ -29,7 +29,7 @@ def create_discharge_inputs(
         train_split,
         test_split,
         input_columns=DEFAULT_FEATURES,
-        output_columns=DEFAULT_TARGETS,
+        output_columns=DEFAULT_TARGETS, # Change if doing auto-regression
         history_window=4,
         q_eval=REFERENCE_DISCHARGE_CAPACITIES,
         forecast_horizon=1,
@@ -48,7 +48,7 @@ def create_discharge_inputs(
     history_widow: int
         Number of previous timesteps to use for prediction.
     q_eval: List[float]
-        List of normalized capcities
+        List of normalized capacities
     forecast_horizon: int
         Number of timesteps in the future to predict.
     Returns
