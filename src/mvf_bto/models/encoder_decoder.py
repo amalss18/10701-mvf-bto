@@ -17,7 +17,7 @@ class EncoderDecoder(tf.keras.Model):
             batch_input_shape=batch_input_shape,
         )
 
-        self.dilate = tf.keras.RepeatVector(n_outputs)
+        self.dilate = tf.keras.layers.RepeatVector(n_outputs)
         self.lstm_decoder = tf.keras.layers.LSTM(
             units=lstm_units,
             return_sequences=True,
