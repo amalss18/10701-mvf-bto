@@ -3,13 +3,13 @@ import tensorflow as tf
 
 class BaselineRNN(tf.keras.Model):
     def __init__(
-            self,
-            batch_input_shape,
-            n_outputs,
-            rnn1_units=32,
-            rnn2_units=16,
-            dense1_units=16,
-            dense2_units=8,
+        self,
+        batch_input_shape,
+        n_outputs,
+        rnn1_units=32,
+        rnn2_units=16,
+        dense1_units=16,
+        dense2_units=8,
     ):
         super().__init__()
         self.rnn_1 = tf.keras.layers.SimpleRNN(
