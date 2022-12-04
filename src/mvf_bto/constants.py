@@ -18,7 +18,7 @@ DEFAULT_FEATURES = ["T_norm", "Q_eval", "V_norm", "Cycle"]
 DEFAULT_TARGETS = ["V_norm", "T_norm"]
 
 # cells with corrupted temperature data
-BLACKLISTED_CELL = ["b1c3", "b1c8"]
+BLACKLISTED_CELL = ["b1c3", "b1c8", "b1c28"]
 
 # charging current
 MIN_CHARGE_CURRENT = 0.0
