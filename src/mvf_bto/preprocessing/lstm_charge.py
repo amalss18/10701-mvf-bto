@@ -257,25 +257,29 @@ def _get_interpolated_normalized_charge_data(cell_id, single_cell_data, policy, 
             # V_drop_index=np.delete(V_drop_index,-1)
             # for charge step with only one voltage drop
             if (not (cell_id in double_V_drop)):
-                q_eval = np.linspace(0,0.1,8)
-                q_eval = np.append(q_eval, np.linspace(0.2,df['Qc'].values[V_drop_index[0]-1],4))
-                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[0]-1], df['Qc'].values[V_drop_index[0]+2],3))
-                # q_eval = np.append(q_eval, np.array(df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)<10)[0]]]))
-                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[0]+4], max(df['Qc'].values)-0.01,10))
-                # q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)<10)[0][-1]+1]],df['Qc'].values[V_drop_index[-1]],10))
-                # q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[-1]+1],max(df['Qc'].values)-0.01,10))
-                q_eval = np.append(q_eval, np.linspace(max(df['Qc'].values)-0.01,max(df['Qc'].values),max_interp_num-len(q_eval)))
-            # for charge step with 2 voltage drop
+                q_eval = np.concatenate(
+                    (
+                        np.linspace(df.Qc.min(),0.1,10),
+                        np.linspace(0.2,df['Qc'].values[V_drop_index[0]-1],8),
+                        np.linspace(df['Qc'].values[V_drop_index[0]-1], df['Qc'].values[V_drop_index[0]+2],3),
+                        np.linspace(df['Qc'].values[V_drop_index[0]+4], max(df['Qc'].values)-0.01,8),
+                    ),
+                    axis=0,
+                )
+                q_eval = np.append(q_eval, np.linspace(df.Qc.max()-0.01,df.Qc.max(),max_interp_num-len(q_eval)))            # for charge step with 2 voltage drop
             elif (cell_id in double_V_drop):
-                q_eval = np.linspace(0,0.1,8)
-                q_eval = np.append(q_eval, np.linspace(0.2,df['Qc'].values[V_drop_index[0]-1],4))
-                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[0]-1], df['Qc'].values[V_drop_index[0]+2],3))
-                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[0]+4], df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]-1]],6))
-                # q_eval = np.append(q_eval, np.array(df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)<10)]]))
-                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]]],df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]]+2],3))
-                q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]]+4],max(df['Qc'].values)-0.01,5))
-                # q_eval = np.append(q_eval, np.linspace(df['Qc'].values[V_drop_index[-1]+1],max(df['Qc'].values)-0.01,10))
-                q_eval = np.append(q_eval, np.linspace(max(df['Qc'].values)-0.01,max(df['Qc'].values),max_interp_num-len(q_eval)))
+                q_eval = np.concatenate(
+                    (
+                        np.linspace(df.Qc.min(),0.1,8),
+                        np.linspace(0.2,df['Qc'].values[V_drop_index[0]-1],4),
+                        np.linspace(df['Qc'].values[V_drop_index[0]-1], df['Qc'].values[V_drop_index[0]+2],3),
+                        np.linspace(df['Qc'].values[V_drop_index[0]+4], df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]-1]],6),
+                        np.linspace(df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]]],df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]]+2],3),
+                        np.linspace(df['Qc'].values[V_drop_index[np.where(np.diff(V_drop_index)>10)[0][1]]+4],max(df['Qc'].values)-0.01,8),
+                    ),
+                    axis=0
+                )
+                q_eval = np.append(q_eval, np.linspace(df.Qc.max()-0.01,df.Qc.max(),max_interp_num-len(q_eval)))
         else:
             raise RuntimeError('q_eval not none')
         if(len(q_eval)>max_interp_num):
