@@ -32,6 +32,7 @@ def load_data(file_path, num_cells=None, batch_id = 1):
     if num_cells is None:
         num_cells = batch["summary"].shape[0]
     for i in tqdm.tqdm(range(num_cells)):
+    # for i in tqdm.tqdm(range(,9)):
         cl = f[batch["cycle_life"][i, 0]][()]
         policy = f[batch["policy_readable"][i, 0]][()].tobytes()[::2].decode()
         summary_IR = np.hstack(f[batch["summary"][i, 0]]["IR"][0, :].tolist())
