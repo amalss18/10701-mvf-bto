@@ -9,3 +9,4 @@ src/mvf_bto/models/__pycache__/
 .DS_Store
 src/.DS_Store
 src/mvf_bto/.DS_Stores
+*.pyc
