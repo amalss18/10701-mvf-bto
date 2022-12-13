@@ -22,7 +22,7 @@ from mvf_bto.constants import (
 
 DEFAULT_FEATURES = ["T_norm", "Q_eval", "V_norm", "Cycle", "C_rate1", "SOC1", "C_rate2"]
 DEFAULT_TARGETS = ["V_norm", "T_norm"]
-# BLACKLISTED_CELL = ["b1c3", "b1c8"]
+BLACKLISTED_CELL = ["b1c3", "b1c8"]
 double_V_drop = ['b1c8']
 
 def create_charge_inputs(
@@ -79,9 +79,8 @@ def create_charge_inputs(
 
     original_train_dfs = []
     train_dfs = []
-    fig_list=[]
     for cell_id in train_cells:
-        X_cell_list, y_cell_list, original_df_list, df_list, fig = _get_single_cell_inputs(
+        X_cell_list, y_cell_list, original_df_list, df_list= _get_single_cell_inputs(
             cell_id=cell_id,
             single_cell_data=data[cell_id]["cycles"],
             policy=data[cell_id]["charge_policy"],
@@ -95,12 +94,11 @@ def create_charge_inputs(
         y_train_list.extend(y_cell_list)
         original_train_dfs.extend(original_df_list)
         train_dfs.extend(df_list)
-        fig_list.append(fig)
 
     original_test_dfs = []
     test_dfs = []
     for cell_id in test_cells:
-        X_cell_list, y_cell_list, original_df_list, df_list, fig = _get_single_cell_inputs(
+        X_cell_list, y_cell_list, original_df_list, df_list = _get_single_cell_inputs(
             cell_id=cell_id,
             single_cell_data=data[cell_id]["cycles"],
             policy=data[cell_id]["charge_policy"],
@@ -114,13 +112,12 @@ def create_charge_inputs(
         y_test_list.extend(y_cell_list)
         original_test_dfs.extend(original_df_list)
         test_dfs.extend(df_list)
-        fig_list.append(fig)
 
     original_val_dfs = []
     val_dfs = []
     if len(validation_cells):
         for cell_id in validation_cells:
-            X_cell_list, y_cell_list, original_df_list, df_list, fig = _get_single_cell_inputs(
+            X_cell_list, y_cell_list, original_df_list, df_list = _get_single_cell_inputs(
                 cell_id=cell_id,
                 single_cell_data=data[cell_id]["cycles"],
                 policy=data[cell_id]["charge_policy"],
@@ -134,7 +131,6 @@ def create_charge_inputs(
             y_val_list.extend(y_cell_list)
             original_val_dfs.extend(original_df_list)
             val_dfs.extend(df_list)
-            fig_list.append(fig)
     batch_size = X_train_list[0].shape[0]
     X_train = np.array(X_train_list)
     X_test = np.array(X_test_list)
@@ -180,7 +176,6 @@ def create_charge_inputs(
                "test_dfs": pd.concat(test_dfs),
                "val_dfs": pd.concat(val_dfs),
                "batch_size": batch_size,
-               "fig_list": fig_list,
             #    "q_eval": q_eval
            }
 
@@ -197,7 +192,6 @@ def _get_interpolated_normalized_charge_data(cell_id, single_cell_data, policy, 
     else:
         flag=False
     # iterate over each cycle in data
-    fig=go.Figure()
     for cycle_key, time_series in tqdm.tqdm(single_cell_data.items()):
         cycle_num = int(cycle_key)
 
@@ -302,10 +296,6 @@ def _get_interpolated_normalized_charge_data(cell_id, single_cell_data, policy, 
 
         # judge if datapoints are usable with temperature, which should not fluctuate during charging
         # range (0.2,0.8)
-        if (np.diff(interp_df.T_norm[np.where(q_eval == 0.1)[0][0]:np.where(q_eval == df['Qc'].values[V_drop_index[0]-1])[0][0]]) < 0).any():
-            fig.add_trace(go.Scatter(x=interp_df.Q_eval, y=interp_df.T_norm))
-            continue
-
 
         interp_df["Cycle"] = [cycle_num / MAX_CYCLE for i in range(len(interp_df))]
         interp_df["C_rate1"] = [float(re.findall(r"\d*\.*\d+",policy)[0]) for i in range(len(interp_df))]
@@ -315,7 +305,7 @@ def _get_interpolated_normalized_charge_data(cell_id, single_cell_data, policy, 
 
         df_list.append(interp_df)
         original_df_list.append(temp_df)        
-    return df_list, original_df_list,fig
+    return df_list, original_df_list
 
 
 def _split_sequences(sequences, n_steps, n_outputs, nf_steps):
@@ -344,7 +334,7 @@ def _get_single_cell_inputs(
     """
     X_list, y_list = [], []
     # print('get single',q_eval)
-    df_list, original_df_list,fig = _get_interpolated_normalized_charge_data(cell_id, single_cell_data, policy, q_eval=q_eval)
+    df_list, original_df_list = _get_interpolated_normalized_charge_data(cell_id, single_cell_data, policy, q_eval=q_eval)
     for df in df_list:
         sequence_list = []
 
@@ -371,4 +361,4 @@ def _get_single_cell_inputs(
         X_list.append(X_cycle)
         y_list.append(y_cycle)
 
-    return X_list, y_list, original_df_list, df_list, fig
+    return X_list, y_list, original_df_list, df_list

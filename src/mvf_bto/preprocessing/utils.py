@@ -1,7 +1,7 @@
 import random
-# from mvf_bto.constants import BLACKLISTED_CELL
+from mvf_bto.constants import BLACKLISTED_CELL
 
-BLACKLISTED_CELL=[]
+BLACKLISTED_CELL=['b1c3','b1c8','b1c28']
 def split_train_validation_test_sets(data, train_split, test_split):
     loaded_cell_ids = list(data.keys())
     cell_ids = []
