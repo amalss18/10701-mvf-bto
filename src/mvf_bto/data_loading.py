@@ -3,7 +3,7 @@ import tqdm
 import numpy as np
 
 
-def load_data(file_path, num_cells=None):
+def load_data(file_path, num_cells=None, batch_id = 1):
     """
     Loads battery cycling data from a .mat file.
     Parameters
@@ -83,6 +83,6 @@ def load_data(file_path, num_cells=None):
             "summary": summary,
             "cycles": cycle_dict,
         }
-        key = "b1c" + str(i)
+        key = f"b{batch_id}c{i}"
         bat_dict[key] = cell_dict
     return bat_dict
