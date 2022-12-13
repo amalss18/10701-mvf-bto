@@ -16,6 +16,7 @@ MIN_DISCHARGE_CURRENT = -4.05
 # default feature and target column labels
 DEFAULT_FEATURES = ["T_norm", "Q_eval", "V_norm", "Cycle"]
 DEFAULT_TARGETS = ["V_norm", "T_norm"]
+DEFAULT_TARGETS_AUTO = ["T_norm", "Q_eval", "V_norm", "Cycle"]
 
 # cells with corrupted temperature data
 BLACKLISTED_CELL = ["b1c3", "b1c8", "b1c28"]
